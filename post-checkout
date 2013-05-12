@@ -1,5 +1,11 @@
 #!/bin/sh
-mysql -u user -ppassword dbname < db.sql
+#
+# Mysql bd name, user, password. 
+#
+dbname=dbname
+user=dbuser
+pass=password
+#
+mysql -u $user --password=$pass -B $dbname < db.sql
 
 exit 0
-
