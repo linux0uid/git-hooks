@@ -1,0 +1,5 @@
+#!/bin/sh
+mysql -u user -ppassword dbname < db.sql
+
+exit 0
+
