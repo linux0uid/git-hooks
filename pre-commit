@@ -1,6 +1,12 @@
 #!/bin/sh
-mysqldump -u user -ppassword dbname > db.sql
-
+#
+# Mysql bd name, user, password. 
+#
+dbname='dbname'
+user='dbuser'
+pass='password'
+#
+mysqldump -u $user --password=$pass -B $dbname > db.sql
 git add db.sql
-exit 0
 
+exit 0
