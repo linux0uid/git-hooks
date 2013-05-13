@@ -1,12 +1,26 @@
 #!/bin/sh
 #
+#
 # Mysql bd name, user, password. 
 #
 dbname='dbname'
 user='dbuser'
 pass='password'
 #
-mysqldump -u $user --password=$pass -B $dbname > db.sql
+#
+# Change this IP addresses and port of MySQL server
+#
+# Example:
+# host='127.0.0.1'
+# port='3306'
+host='localhost'
+####################################################################################
+if test $port !=/dev/null
+then
+	mysqldump -u $user --password=$pass -h $host --port=$port -B $dbname > db.sql
+else
+	mysqldump -u $user --password=$pass -h $host -B $dbname > db.sql
+fi
 git add db.sql
 
 exit 0
