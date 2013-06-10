@@ -1,26 +1,27 @@
 #!/bin/sh
 #
-#
-# Mysql bd name, user, password. 
-#
-dbname='dbname'
-user='dbuser'
-pass='password'
-#
-#
-# Change this IP addresses and port of MySQL server
-#
-# Example:
-# host='127.0.0.1'
-# port='3306'
-host='localhost'
+#-----------------------------------------------------------------------------------
 ####################################################################################
-if test $port !=/dev/null
+# Warning! Don't change the following text, if you don't know what are you doing.
+# Предупреждение! Не изменяйте следующий текст, если не знаете что делаете.
+####################################################################################
+#-----------------------------------------------------------------------------------
+#
+DIRNAME=$(dirname $0)
+. $DIRNAME/conf/mysql.cfg
+
+if [ "$port" ]
 then
-	mysqldump -u $user --password=$pass -h $host --port=$port -B $dbname > db.sql
-else
-	mysqldump -u $user --password=$pass -h $host -B $dbname > db.sql
+	port="--port=$port"
 fi
+
+cd ${DIRNAME}/../../
+mysqldump -u $user --password=$pass -h $host $port -v --no-data --single-transaction --skip-comments --opt --add-drop-database -B $dbname > shema.sql 
+mysqldump -u $user --password=$pass -h $host $port -v --single-transaction --skip-comments --opt $dbname > db.sql
+
+echo "Database dump $dbname@$host saved in the file db.sql"
+
 git add db.sql
+git add shema.sql
 
 exit 0
