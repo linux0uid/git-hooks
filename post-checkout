@@ -1,5 +1,20 @@
 #!/bin/sh
 #
+#  Copyright 2013  Konstantin Slupko (email: linux0uid@gmail.com)
+#
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
 #-----------------------------------------------------------------------------------
 ####################################################################################
 # Warning! Don't change the following text, if you don't know what are you doing.
@@ -9,6 +24,7 @@
 #
 DIRNAME=$(dirname $0)
 . $DIRNAME/conf/mysql.cfg
+REALDIRNAME=$(dirname $(readlink -e $0))
 
 if [ "$port" ]
 then
@@ -16,9 +32,26 @@ then
 fi
 
 cd ${DIRNAME}/../../
+PROGECTDIRNAME=$(pwd);
+
 mysql -u $user --password=$pass -h $host $port -B $dbname < shema.sql
+ERROR=$?
 mysql -u $user --password=$pass -h $host $port -B $dbname < db.sql
 
-echo "The database $dbname@$host has been updated"
+if [[ "$?" -eq "0" && "$ERROR" -eq "0" ]]
+then
+	echo "The database $dbname@$host has been successfully updated"
+else
+	echo "
+		-----------------!!!ERROR!!!----------------
+		Database $dbname@$host has NOT been updated
+		You're doing something wrong!!!
+		
+		Check your config file: $REALDIRNAME/conf/mysql.cfg
+		Check the availability and accuracy of the following files:
+		$PROGECTDIRNAME/db.sql
+		$PROGECTDIRNAME/shema.sql"
+fi
+
 
 exit 0
