@@ -24,6 +24,7 @@
 #
 DIRNAME=$(dirname $0)
 . $DIRNAME/conf/mysql.cfg
+REALDIRNAME=$(dirname $(readlink -e $0))
 
 if [ "$port" ]
 then
@@ -31,9 +32,26 @@ then
 fi
 
 cd ${DIRNAME}/../../
+PROGECTDIRNAME=$(pwd);
+
 mysql -u $user --password=$pass -h $host $port -B $dbname < shema.sql
+ERROR=$?
 mysql -u $user --password=$pass -h $host $port -B $dbname < db.sql
 
-echo "The database $dbname@$host has been updated"
+if [[ "$?" -eq "0" && "$ERROR" -eq "0" ]]
+then
+	echo "The database $dbname@$host has been successfully updated"
+else
+	echo "
+		-----------------!!!ERROR!!!----------------
+		Database $dbname@$host has NOT been updated
+		You're doing something wrong!!!
+		
+		Check your config file: $REALDIRNAME/conf/mysql.cfg
+		Check the availability and accuracy of the following files:
+		$PROGECTDIRNAME/db.sql
+		$PROGECTDIRNAME/shema.sql"
+fi
+
 
 exit 0
