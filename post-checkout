@@ -38,7 +38,7 @@ mysql -u $user --password=$pass -h $host $port -B $dbname < shema.sql
 ERROR=$?
 mysql -u $user --password=$pass -h $host $port -B $dbname < db.sql
 
-if [[ "$?" -eq "0" && "$ERROR" -eq "0" ]]
+if [ "$?" -eq 0 ] && [ "$ERROR" -eq 0 ]
 then
 	echo "The database $dbname@$host has been successfully updated"
 else
