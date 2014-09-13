@@ -72,8 +72,6 @@ else
     		Check your config file: $REALDIRNAME/conf/db.conf"
     fi
     
-    git add shema.sql
-
 fi
 
 git add db.sql
