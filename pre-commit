@@ -1,11 +1,11 @@
 #!/bin/sh
 #
-#  Copyright 2013  Konstantin Slupko (email: linux0uid@gmail.com)
+#  Copyright 2014  Konstantin Slupko (email: linux0uid@gmail.com)
 #
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
 #    the Free Software Foundation, either version 3 of the License, or
-#    (at your option) any later version.
+#    any later version.
 #
 #    This program is distributed in the hope that it will be useful,
 #    but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -22,43 +22,61 @@
 ####################################################################################
 #-----------------------------------------------------------------------------------
 #
+DB_FILE="db.sql"
+
 DIRNAME=$(dirname $0)
-. $DIRNAME/conf/mysql.cfg
+. $DIRNAME/conf/db.conf
 REALDIRNAME=$(dirname $(readlink -e $0))
 
-if [ "$port" ]
-then
-	port="--port=$port"
-fi
-
 cd ${DIRNAME}/../../
-mysqldump -u $user --password=$pass -h $host $port --no-data --single-transaction --skip-comments --opt --add-drop-database -B $dbname > shema.sql 
+    
+#Check using drush
+if [ "$use_drush" = "yes" ]; then
 
-if [ "$?" = "0" ]
-then
-	echo "Database dump --no-data $dbname@$host saved in the file shema.sql"
+    drush variable-set -y maintenance_mode 1
+    ERROR=$?
+    if [ "$ERROR" -ne 0 ]
+    then
+        echo "
+            Warning! You do not have drush or it is not working correctly.
+            Install the drush, please!!!"
+    else
+        dbname=$(drush sql-conf | grep "database" | sed 's/\(.*\)database\]\ => \s*\(.*\)/\2/')
+        drush sql-dump --result-file="$DB_FILE"
+        sed -i "7,/^$/s/^$/\/*!40000 DROP DATABASE IF EXISTS \`${dbname}\`*\/;\
+            \nCREATE DATABASE \/*!32312 IF NOT EXISTS*\/ \`${dbname}\` \/*!40100 DEFAULT CHARACTER SET utf8 *\/;\
+            \nUSE \`${dbname}\`;/" "$DB_FILE"
+    fi
+    drush variable-delete -y maintenance_mode 0
+
 else
-	echo "
-		-----------------------!!!ERROR!!!---------------------------
-		Database dump $dbname@$host is NOT saved in the file shema.sql
-		You're doing something wrong!!!
-		Check your config file: $REALDIRNAME/conf/mysql.cfg"
-fi
 
-mysqldump -u $user --password=$pass -h $host $port --single-transaction --skip-comments --opt $dbname > db.sql
+    if [ "$port" ]
+    then
+    	port="--port=$port"
+    fi
+    
+    mysqldump -u $user --password=$pass -h $host $port --single-transaction --skip-comments --opt $dbname > $DB_FILE
+    
+    if [ "$?" = "0" ]
+    then
+    	echo "Database dump $dbname@$host saved in the file db.sql"
+        sed -i "0,/^$/s/^$/\/*!40000 DROP DATABASE IF EXISTS \`${dbname}\`*\/;\
+            \nCREATE DATABASE \/*!32312 IF NOT EXISTS*\/ \`${dbname}\` \/*!40100 DEFAULT CHARACTER SET utf8 *\/;\
+            \nUSE \`${dbname}\`;/" "$DB_FILE"
+    else
+    	echo "
+    		-----------------------!!!ERROR!!!---------------------------
+    		Database dump $dbname@$host is NOT saved in the file db.sql
+    		You're doing something wrong!!!
+    		Check your config file: $REALDIRNAME/conf/db.conf"
+    fi
+    
+    git add shema.sql
 
-if [ "$?" = "0" ]
-then
-	echo "Database dump $dbname@$host saved in the file db.sql"
-else
-	echo "
-		-----------------------!!!ERROR!!!---------------------------
-		Database dump $dbname@$host is NOT saved in the file db.sql
-		You're doing something wrong!!!
-		Check your config file: $REALDIRNAME/conf/mysql.cfg"
 fi
 
 git add db.sql
-git add shema.sql
+
 
 exit 0
